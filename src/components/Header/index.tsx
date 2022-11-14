@@ -1,13 +1,23 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+
+import BackButton from '../BackButton';
 import styles from './styles';
 
-const Header = ({ title = 'Eureka' }) => {
+interface Props {
+  title?: string;
+}
+
+const Header = ({ title }: Props) => {
+  const { canGoBack } = useNavigation();
+
   return (
     <SafeAreaView edges={['top']} style={styles.header}>
       <View style={styles.container}>
-        <Text style={styles.title}>{title}</Text>
+        {canGoBack() && <BackButton />}
+        {!!title && <Text style={styles.title}>{title}</Text>}
       </View>
     </SafeAreaView>
   );
