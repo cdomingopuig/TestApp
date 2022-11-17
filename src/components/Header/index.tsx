@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
-import BackButton from '../BackButton';
+import BackButton from 'components/BackButton';
 import styles from './styles';
 
 interface Props {

@@ -1,8 +1,13 @@
-import { HOME_SCREEN, IMAGE_SCREEN } from './screens';
+import { HOME_SCREEN, IMAGE_SCREEN } from 'constants/screens';
+
+export interface LocationProp {
+  latitude: number;
+  longitude: number;
+}
 
 export interface ImageProp {
   url: string;
-  location?: string;
+  location?: LocationProp;
 }
 
 export type RootStackParamList = {

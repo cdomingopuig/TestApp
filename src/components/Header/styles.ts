@@ -1,19 +1,24 @@
 import { StyleSheet } from 'react-native';
 
+import { RAISIN_BLACK, WHITE } from 'constants/colors';
+import { fullShadow } from 'constants/shadows';
+
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingVertical: 10,
   },
   header: {
-    backgroundColor: '#E4C3AD',
+    ...fullShadow,
+    backgroundColor: WHITE,
   },
   title: {
-    color: 'black',
+    color: RAISIN_BLACK,
     flex: 1,
     textAlign: 'center',
+    fontWeight: 'bold',
   },
 });
 

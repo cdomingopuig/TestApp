@@ -1,59 +1,68 @@
-import React, { useCallback } from 'react';
-import { FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { NavigationProp } from '@react-navigation/native';
+import { launchCamera } from 'react-native-image-picker';
 
-import Header from '../../components/Header';
-import { IMAGE_SCREEN } from '../../constants/screens';
+import Button from 'components/Button';
+import Header from 'components/Header';
+import { RAISIN_BLACK } from 'constants/colors';
+import { IMAGE_SCREEN } from 'constants/screens';
+import { ImageProp, LocationProp } from 'constants/types';
+import useLocation from 'hooks/useLocation';
+import EmptyState from './EmptyState';
 import styles from './styles';
 
-const images = [
-  {
-    url: 'https://images.unsplash.com/photo-1506371712237-a03dca697e2e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8M3x8cG9ydHJhaXQlMjBsYW5kc2NhcGV8ZW58MHx8MHx8&w=1000&q=80',
-  },
-  {
-    url: 'https://media.istockphoto.com/id/944812540/photo/mountain-landscape-ponta-delgada-island-azores.jpg?s=612x612&w=0&k=20&c=mbS8X4gtJki3gGDjfC0sG3rsz7D0nls53a0b4OPXLnE=',
-  },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  {
-    url: 'https://media.istockphoto.com/id/944812540/photo/mountain-landscape-ponta-delgada-island-azores.jpg?s=612x612&w=0&k=20&c=mbS8X4gtJki3gGDjfC0sG3rsz7D0nls53a0b4OPXLnE=',
-  },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  {
-    url: 'https://media.istockphoto.com/id/944812540/photo/mountain-landscape-ponta-delgada-island-azores.jpg?s=612x612&w=0&k=20&c=mbS8X4gtJki3gGDjfC0sG3rsz7D0nls53a0b4OPXLnE=',
-  },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  {
-    url: 'https://media.istockphoto.com/id/944812540/photo/mountain-landscape-ponta-delgada-island-azores.jpg?s=612x612&w=0&k=20&c=mbS8X4gtJki3gGDjfC0sG3rsz7D0nls53a0b4OPXLnE=',
-  },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  {
-    url: 'https://media.istockphoto.com/id/944812540/photo/mountain-landscape-ponta-delgada-island-azores.jpg?s=612x612&w=0&k=20&c=mbS8X4gtJki3gGDjfC0sG3rsz7D0nls53a0b4OPXLnE=',
-  },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-  { url: 'https://iso.500px.com/wp-content/uploads/2014/07/big-one.jpg' },
-];
+interface Props {
+  navigation: NavigationProp<any, any>;
+}
 
-const MainScreen = ({ navigation }) => {
+const MainScreen = ({ navigation }: Props) => {
+  const [images, setImages] = useState<Array<ImageProp>>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const getLocation = useLocation();
+
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const jsonValue = await AsyncStorage.getItem('images');
+        const imgs = JSON.parse(jsonValue || '');
+        if (imgs.length > 0) {
+          setImages(imgs);
+        }
+      } catch (e) {
+        console.log('Error retrieving images from async storage: ', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getData();
+  }, []);
+
+  useEffect(() => {
+    const storeData = async () => {
+      try {
+        if (images.length > 0) {
+          const jsonValue = JSON.stringify(images);
+          await AsyncStorage.setItem('images', jsonValue);
+        }
+      } catch (e) {
+        console.log('Error saving images in the async storage: ', e);
+      }
+    };
+    storeData();
+  }, [images]);
+
   const renderItem = useCallback(
-    ({ item, item: { url } }) => (
+    ({ item, item: { url } }: { item: ImageProp }) => (
       <TouchableOpacity
         style={styles.item}
         onPress={() => navigation.navigate(IMAGE_SCREEN, { image: item })}>
@@ -62,6 +71,27 @@ const MainScreen = ({ navigation }) => {
     ),
     [navigation],
   );
+
+  const openCamera = useCallback(() => {
+    getLocation((location?: LocationProp) => {
+      try {
+        launchCamera(
+          { mediaType: 'photo', includeBase64: true, saveToPhotos: false },
+          async ({ assets }) => {
+            if (assets && assets[0]) {
+              const newImage: ImageProp = {
+                url: `data:image/jpeg;base64,${assets[0].base64}`,
+                location,
+              };
+              setImages(auxImages => [...auxImages, newImage]);
+            }
+          },
+        );
+      } catch (e) {
+        console.log(e);
+      }
+    });
+  }, [getLocation]);
 
   return (
     <View style={styles.container}>
@@ -73,12 +103,23 @@ const MainScreen = ({ navigation }) => {
         numColumns={3}
         keyExtractor={(_, i) => `image-${i}`}
         renderItem={renderItem}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            {loading ? (
+              <ActivityIndicator size="large" color={RAISIN_BLACK} />
+            ) : (
+              <EmptyState />
+            )}
+          </View>
+        }
       />
       <View style={styles.footer}>
         <SafeAreaView edges={['bottom']}>
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Take Picture</Text>
-          </TouchableOpacity>
+          <Button
+            style={styles.button}
+            title="Take Picture"
+            onPress={openCamera}
+          />
         </SafeAreaView>
       </View>
     </View>

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { Image, ScrollView, Text } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Image, ScrollView, Share, Text } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 
-import Header from '../../components/Header';
+import Button from 'components/Button';
+import Header from 'components/Header';
+import { RootStackParamList } from 'constants/types';
 import styles from './styles';
-import { RootStackParamList } from '../../constants/types';
 
 type Props = {
   route: RouteProp<RootStackParamList, 'ImageScreen'>;
@@ -13,11 +14,15 @@ type Props = {
 const ImageScreen = ({
   route: {
     params: {
-      image: { url, location = 'Random' },
+      image: { url, location },
     },
   },
 }: Props) => {
   const [aspectRatio, setAspectRatio] = useState(0);
+
+  const handleShare = useCallback(() => {
+    Share.share({ url });
+  }, [url]);
 
   useEffect(() => {
     Image.getSize(url, (width, height) => setAspectRatio(width / height));
@@ -32,7 +37,13 @@ const ImageScreen = ({
           style={[styles.image, { aspectRatio }]}
           resizeMode="contain"
         />
-        <Text style={styles.location}>Location: {location} </Text>
+        {!!location && (
+          <Text style={styles.location}>Latitude: {location.latitude} </Text>
+        )}
+        {!!location && (
+          <Text style={styles.location}>Longitude: {location.longitude} </Text>
+        )}
+        <Button onPress={handleShare} title="Share" style={styles.button} />
       </ScrollView>
     </>
   );
